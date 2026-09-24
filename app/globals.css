@@ -1,12 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/quanta/index.css";
+@import "../styles/theme.css";
+@import "../styles/studio/prompt-box.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
+    --font-heading: var(--hf-type-family-grotesk);
+    --font-sans: var(--hf-type-family-secondary);
+    --font-mono: var(--hf-type-family-mono);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -47,44 +51,6 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Studio theme — dark-only, one lime brand accent. Adapt the hues to the product,
-   keep the contrast: near-black ground, hairline borders, lime for the primary action. */
-:root {
-    --background: oklch(0.13 0 0);
-    --foreground: oklch(0.96 0 0);
-    --card: oklch(0.18 0 0);
-    --card-foreground: oklch(0.96 0 0);
-    --popover: oklch(0.2 0 0);
-    --popover-foreground: oklch(0.96 0 0);
-    --primary: oklch(0.94 0.22 118);
-    --primary-foreground: oklch(0.15 0.02 118);
-    --secondary: oklch(1 0 0 / 6%);
-    --secondary-foreground: oklch(0.96 0 0);
-    --muted: oklch(1 0 0 / 5%);
-    --muted-foreground: oklch(0.68 0 0);
-    --accent: oklch(1 0 0 / 8%);
-    --accent-foreground: oklch(0.96 0 0);
-    --destructive: oklch(0.7 0.19 22);
-    --border: oklch(1 0 0 / 8%);
-    --input: oklch(1 0 0 / 12%);
-    --ring: oklch(0.94 0.22 118 / 60%);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.75rem;
-    --sidebar: oklch(0.16 0 0);
-    --sidebar-foreground: oklch(0.96 0 0);
-    --sidebar-primary: oklch(0.94 0.22 118);
-    --sidebar-primary-foreground: oklch(0.15 0.02 118);
-    --sidebar-accent: oklch(1 0 0 / 7%);
-    --sidebar-accent-foreground: oklch(0.96 0 0);
-    --sidebar-border: oklch(1 0 0 / 8%);
-    --sidebar-ring: oklch(0.556 0 0);
-    color-scheme: dark;
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -99,20 +65,11 @@
 
 /* Studio primitives that plain utilities cannot express. */
 @layer components {
-  .studio-generate {
-    background-image:
-      linear-gradient(191deg, rgba(255, 255, 20, 0) 12.7%, rgb(255, 255, 20) 75.8%),
-      linear-gradient(90deg, rgb(209, 254, 23) 0%, rgb(209, 254, 23) 100%);
-    box-shadow:
-      inset 0 -3px 0 0 rgba(0, 0, 0, 0.32),
-      0 32px 24px rgba(0, 0, 0, 0.15),
-      0 6px 4px rgba(0, 0, 0, 0.25);
-  }
   .studio-glow {
     background-image: radial-gradient(
       120% 100% at 50% 0%,
-      color-mix(in oklab, var(--primary) 42%, transparent) 0%,
-      color-mix(in oklab, var(--primary) 14%, transparent) 45%,
+      var(--hf-color-transparent-lime-40) 0%,
+      var(--hf-color-transparent-lime-15) 45%,
       transparent 82%
     );
     animation: studio-pulse 2600ms ease-in-out infinite;

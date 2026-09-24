@@ -3,120 +3,158 @@
 import { Children, isValidElement } from "react";
 import type { ComponentProps, ComponentPropsWithRef, ReactElement, ReactNode, Ref } from "react";
 import { useRender } from "@base-ui/react/use-render";
-import { Sparkles } from "lucide-react";
-
-import { cn } from "@/lib/utils";
+import { Sparkle as SparklesGlyph } from "lucide-react";
+import { cn as cx } from "@/lib/utils";
 
 /**
- * PromptBox — the Studio prompt dock primitives. A horizontal bar: a vertical
- * MODE rail, then one shared shell holding the prompt FIELD over a row of
- * setting PILLS, a strip of reference UPLOAD tiles, and the lime GENERATE CTA.
+ * PromptBox — the Studio "prompt dock" (Figma Marketing-Studio node 7259:51362,
+ * reused in the Cinema-Studio generation state 21768:60842). The horizontal
+ * generation bar every Studio screen leads with: a vertical generation-MODE rail
+ * (Product / App), then one shared right-side dock containing the prompt SURFACE
+ * (a free-text area over a footer row of setting PILLS), a strip of reference
+ * UPLOAD tiles (Product / Avatar), and the special GENERATE button.
  *
- * Composition-first: this file owns the design (surfaces, pill/tile/mode
- * shells, the CTA); `StudioPromptBox` composes the parts with the studio's
- * content. Optional parts accept `hidden` and unmount so flex gaps collapse.
+ * It is the counterpart to `Composer` (the tall side-rail prompt pane): where
+ * Composer is a single vertical field, PromptBox is the wide multi-slot dock
+ * that carries the mode rail, inline setting pickers, upload tiles, and the CTA.
+ *
+ * COMPOSITION-FIRST (same rules as Composer / Sidebar / Modal). The component
+ * owns the DESIGN — the two-layer prompt surface, the pill/tile/mode shells, the
+ * lime CTA — and every control is CONTENT you compose:
  *
  *   <PromptBox.Root>
  *     <PromptBox.ModeRail>
- *       <PromptBox.Mode active start={<Icon/>}>Video</PromptBox.Mode>
+ *       <PromptBox.Mode active start={<CubeIcon />}>Product</PromptBox.Mode>
+ *       <PromptBox.Mode start={<WorldIcon />}>App</PromptBox.Mode>
  *     </PromptBox.ModeRail>
+ *
  *     <PromptBox.Body>
- *       <PromptBox.Field placeholder="Describe the scene…" />
+ *       <PromptBox.Field placeholder="Describe the scene you imagine…" />
  *       <PromptBox.Actions>
- *         <PromptBox.Pill iconOnly start={<Plus/>} />
- *         <PromptBox.Pill end={<ChevronDown/>}>Seedance 2.5</PromptBox.Pill>
+ *         <PromptBox.Pill iconOnly aria-label="Add" start={<PlusIcon />} />
+ *         <PromptBox.Pill start={<Avatar/>} end={<ChevronIcon/>}>UGC</PromptBox.Pill>
+ *         <PromptBox.Pill iconOnly aria-label="Settings" start={<SlidersIcon />} />
  *       </PromptBox.Actions>
  *     </PromptBox.Body>
- *     <PromptBox.Uploads><PromptBox.Upload label="Start frame" /></PromptBox.Uploads>
- *     <PromptBox.Generate cost="—" />
+ *
+ *     <PromptBox.Uploads>
+ *       <PromptBox.Upload label="Product" />
+ *       <PromptBox.Upload label="Avatar" src={cover} />
+ *     </PromptBox.Uploads>
+ *
+ *     <PromptBox.Generate cost={3} oldCost={12} />
  *   </PromptBox.Root>
  *
- * A `Pill` is a bare `<button>` (or any element via `render`), so it drops
- * straight into a Base UI `Select.Trigger`/`Menu.Trigger`.
+ * SETTINGS OPEN AS DROPDOWNS: a `PromptBox.Pill` is a bare `<button>` (or any
+ * element via `render`), so it drops straight into a `Select`/`Dropdown` trigger
+ * exactly like `SettingTrigger` — Base UI drives `data-popup-open` on the host:
+ *
+ *   <Select.Root defaultValue="ugc">
+ *     <Select.Trigger bare render={<PromptBox.Pill start={<Avatar/>} end={<ChevronIcon/>} />}>
+ *       <Select.Value />
+ *     </Select.Trigger>
+ *     <Select.Content size="picker">…</Select.Content>
+ *   </Select.Root>
+ *
+ * `surface="glass"` skins the whole dock as a frosted floating bar (the
+ * generation-state dock) instead of the plain, centered before-generation dock.
+ *
+ * EVERY SLOT IS OPTIONAL. Because the dock is composition-first, a caller shows a
+ * subset simply by omitting parts — no part is required. For prop-driven UIs that
+ * would rather keep the JSX and toggle a boolean, the optional parts (`ModeRail`,
+ * `Mode`, `Pill`, `Uploads`, `Upload`) accept `hidden`: when `true` the part
+ * unmounts (renders `null`) so the surrounding flex gaps collapse cleanly —
+ * unlike the native `hidden` attribute, which would leave an empty box in flow.
+ * This is how the Studio prompt box makes the Product/App toggle, the
+ * Product/Avatar upload tiles, and each inline setting individually switchable.
  */
 
 export type PromptBoxSurface = "plain" | "glass";
 
-const HOVER = "hover:bg-white/8 data-popup-open:bg-white/8";
-const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const DISABLED = "disabled:pointer-events-none disabled:opacity-40";
+const SURFACE_CLASS = {
+  plain: "",
+  glass: "q-prompt-box-glass",
+} satisfies Record<PromptBoxSurface, string>;
 
-/* ── Root ─────────────────────────────────────────────────────────────────── */
-export type PromptBoxRootProps = ComponentProps<"div"> & { surface?: PromptBoxSurface };
-
-function Root({ surface = "plain", className, children: childrenProp, ...props }: PromptBoxRootProps) {
+/* ── Root ──────────────────────────────────────────────────────────────────── */
+export type PromptBoxRootProps = ComponentProps<"div"> & {
+  /** Dock skin: the plain centered dock (default) or the frosted floating bar. */
+  surface?: PromptBoxSurface;
+};
+function Root({
+  surface = "plain",
+  className,
+  children: childrenProp,
+  ...props
+}: PromptBoxRootProps) {
   const children = Children.toArray(childrenProp);
-  const rail: ReactNode[] = [];
-  const dock: ReactNode[] = [];
+  const modeRailChildren: ReactNode[] = [];
+  const dockChildren: ReactNode[] = [];
+
   for (const child of children) {
-    if (isValidElement(child) && child.type === ModeRail) rail.push(child);
-    else dock.push(child);
+    if (isValidElement(child) && child.type === ModeRail) {
+      modeRailChildren.push(child);
+    } else {
+      dockChildren.push(child);
+    }
   }
+
   return (
-    <div className={cn("relative flex items-end gap-2 p-3", className)} {...props}>
-      {rail}
-      {dock.length > 0 ? (
-        <div
-          className={cn(
-            "flex min-w-0 flex-1 rounded-[20px] p-1",
-            surface === "glass"
-              ? "border border-white/10 bg-background/70 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl"
-              : "bg-card shadow-[0_4px_2px_rgba(0,0,0,0.16),0_4px_6px_rgba(0,0,0,0.08)]",
-          )}
-        >
-          <div className="flex min-w-0 flex-1 items-start gap-2 overflow-clip rounded-2xl bg-white/5 p-3">
-            {dock}
-          </div>
+    <div className={cx("q-prompt-box", SURFACE_CLASS[surface], className)} {...props}>
+      {modeRailChildren}
+      {dockChildren.length > 0 ? (
+        <div className="q-prompt-box-dock">
+          <div className="q-prompt-box-dock-surface">{dockChildren}</div>
         </div>
       ) : null}
     </div>
   );
 }
 
-/* ── Mode rail + Mode ─────────────────────────────────────────────────────── */
-export type PromptBoxModeRailProps = ComponentProps<"div"> & { hidden?: boolean };
-
+/* ── Mode rail + Mode ──────────────────────────────────────────────────────── */
+export type PromptBoxModeRailProps = ComponentProps<"div"> & {
+  /** Unmount the whole generation-mode toggle (renders `null`). */
+  hidden?: boolean;
+};
 function ModeRail({ hidden = false, className, ...props }: PromptBoxModeRailProps) {
   if (hidden) return null;
-  return (
-    <div
-      className={cn(
-        "flex w-[70px] shrink-0 flex-col gap-1 rounded-[20px] bg-card p-1 shadow-[0_4px_4px_rgba(0,0,0,0.16),0_4px_12px_rgba(0,0,0,0.08)]",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <div className={cx("q-prompt-box-mode-rail", className)} {...props} />;
 }
 
 export type PromptBoxModeProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
+  /** Highlighted (selected) mode. */
   active?: boolean;
+  /** Unmount this mode option (renders `null`). */
   hidden?: boolean;
+  /** Leading glyph (any node) stacked above the label. */
   start?: ReactNode;
+  /** Mode label. */
   children?: ReactNode;
+  /** Swap the host element (e.g. a Tabs/Toggle trigger). Defaults to a `<button>`. */
   render?: ReactElement;
 };
-
-function Mode({ active = false, hidden = false, start, children, render, className, ref, ...props }: PromptBoxModeProps) {
+function Mode({
+  active = false,
+  hidden = false,
+  start,
+  children,
+  render,
+  className,
+  ref,
+  ...props
+}: PromptBoxModeProps) {
   const element = useRender({
     render,
     defaultTagName: "button",
     ref: ref as Ref<Element> | undefined,
     props: {
-      className: cn(
-        "flex h-[50px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl px-3 py-1.5 text-muted-foreground transition-colors",
-        HOVER,
-        FOCUS,
-        DISABLED,
-        active && "rounded-2xl bg-white/5 text-foreground",
-        className,
-      ),
+      className: cx("q-prompt-box-mode", active && "q-prompt-box-mode-active", className),
       ...(render == null ? { type: "button" as const } : {}),
       ...(active ? { "aria-pressed": true } : {}),
       children: (
         <>
-          {start != null ? <span className="inline-flex items-center justify-center [&_svg]:size-5">{start}</span> : null}
-          {children != null ? <span className="text-[11px] font-semibold leading-none">{children}</span> : null}
+          {start != null ? <span className="q-prompt-box-mode-icon">{start}</span> : null}
+          {children != null ? <span className="q-prompt-box-mode-label">{children}</span> : null}
         </>
       ),
       ...props,
@@ -125,64 +163,68 @@ function Mode({ active = false, hidden = false, start, children, render, classNa
   return hidden ? null : element;
 }
 
-/* ── Body / Field / Actions ───────────────────────────────────────────────── */
-function Body({ className, children, ...props }: ComponentProps<"div">) {
+/* ── Body (the two-layer prompt surface) ───────────────────────────────────── */
+export type PromptBoxBodyProps = ComponentProps<"div"> & {
+  /** Class for the inner white-5% surface that hosts the field + actions. */
+  surfaceClassName?: string;
+};
+function Body({ className, surfaceClassName, children, ...props }: PromptBoxBodyProps) {
   return (
-    <div className={cn("flex min-w-0 flex-1", className)} {...props}>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">{children}</div>
+    <div className={cx("q-prompt-box-body", className)} {...props}>
+      <div className={cx("q-prompt-box-surface", surfaceClassName)}>{children}</div>
     </div>
   );
 }
 
+/* ── Field (the borderless prompt text area) ───────────────────────────────── */
 export type PromptBoxFieldProps = Omit<ComponentProps<"textarea">, "children">;
-
 function Field({ className, rows = 1, ...props }: PromptBoxFieldProps) {
-  return (
-    <textarea
-      rows={rows}
-      className={cn(
-        "min-h-[52px] w-full flex-1 resize-none overflow-hidden bg-transparent p-1 text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <textarea rows={rows} className={cx("q-prompt-box-field", className)} {...props} />;
 }
 
+/* ── Actions (the footer pill row) ─────────────────────────────────────────── */
 function Actions({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("flex w-full flex-none items-center gap-1", className)} {...props} />;
+  return <div className={cx("q-prompt-box-actions", className)} {...props} />;
 }
 
-/* ── Pill ─────────────────────────────────────────────────────────────────── */
+/* ── Pill (a setting control / dropdown trigger) ───────────────────────────── */
 export type PromptBoxPillProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
+  /** Leading slot — a 16px icon or `<Avatar>`. */
   start?: ReactNode;
+  /** Trailing slot — typically a chevron for dropdown pills. */
   end?: ReactNode;
+  /** Pill label. Omit with `iconOnly` for a square glyph button (+ / settings). */
   children?: ReactNode;
+  /** Square icon-only pill (no label). */
   iconOnly?: boolean;
+  /** Unmount this setting pill (renders `null`). */
   hidden?: boolean;
+  /** Swap the host (e.g. `Select.Trigger`/`Dropdown.Trigger`). Defaults to `<button>`. */
   render?: ReactElement;
 };
-
-function Pill({ start, end, children, iconOnly = false, hidden = false, render, className, ref, ...props }: PromptBoxPillProps) {
+function Pill({
+  start,
+  end,
+  children,
+  iconOnly = false,
+  hidden = false,
+  render,
+  className,
+  ref,
+  ...props
+}: PromptBoxPillProps) {
   const element = useRender({
     render,
     defaultTagName: "button",
     ref: ref as Ref<Element> | undefined,
     props: {
-      className: cn(
-        "inline-flex h-7 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-lg bg-white/5 px-2 text-xs font-medium text-foreground transition-colors",
-        HOVER,
-        FOCUS,
-        DISABLED,
-        iconOnly && "w-7 px-0",
-        className,
-      ),
+      className: cx("q-prompt-box-pill", iconOnly && "q-prompt-box-pill-icon-only", className),
       ...(render == null ? { type: "button" as const } : {}),
       children: (
         <>
-          {start != null ? <span className="inline-flex shrink-0 items-center [&_img]:size-4 [&_svg]:size-4">{start}</span> : null}
-          {children != null ? <span className="whitespace-nowrap">{children}</span> : null}
-          {end != null ? <span className="inline-flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">{end}</span> : null}
+          {start != null ? <span className="q-prompt-box-pill-start">{start}</span> : null}
+          {children != null ? <span className="q-prompt-box-pill-label">{children}</span> : null}
+          {end != null ? <span className="q-prompt-box-pill-end">{end}</span> : null}
         </>
       ),
       ...props,
@@ -191,61 +233,72 @@ function Pill({ start, end, children, iconOnly = false, hidden = false, render, 
   return hidden ? null : element;
 }
 
-/* ── Uploads / Upload ─────────────────────────────────────────────────────── */
-export type PromptBoxUploadsProps = ComponentProps<"div"> & { hidden?: boolean };
-
+/* ── Uploads + Upload (reference-image tiles) ──────────────────────────────── */
+export type PromptBoxUploadsProps = ComponentProps<"div"> & {
+  /** Unmount the whole reference-tile strip (renders `null`). */
+  hidden?: boolean;
+};
 function Uploads({ hidden = false, className, ...props }: PromptBoxUploadsProps) {
   if (hidden) return null;
-  return <div className={cn("flex shrink-0 items-start gap-1.5", className)} {...props} />;
+  return <div className={cx("q-prompt-box-uploads", className)} {...props} />;
 }
 
 export type PromptBoxUploadProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
+  /** Bottom label (e.g. "Product", "Avatar", "Character"). */
   label?: ReactNode;
+  /** Filled-state image — when set the tile shows the picked reference. */
   src?: string;
+  /** String media presentation. Defaults to image. */
   mediaType?: "image" | "video";
+  /** Alt text for the filled image. */
   alt?: string;
+  /** Unmount this reference tile (renders `null`). */
   hidden?: boolean;
+  /** The corner glyph (default a plus). Compose a Button/Avatar for a filled slot. */
   add?: ReactNode;
+  /** Extra overlay content composed inside the tile. */
   children?: ReactNode;
+  /** Swap the host element. Defaults to a `<button>`. */
   render?: ReactElement;
 };
-
-function Upload({ label, src, mediaType = "image", alt = "", hidden = false, add, children, render, className, ref, ...props }: PromptBoxUploadProps) {
+function Upload({
+  label,
+  src,
+  mediaType = "image",
+  alt = "",
+  hidden = false,
+  add,
+  children,
+  render,
+  className,
+  ref,
+  ...props
+}: PromptBoxUploadProps) {
   const element = useRender({
     render,
     defaultTagName: "button",
     ref: ref as Ref<Element> | undefined,
     props: {
-      className: cn(
-        "relative flex size-20 shrink-0 cursor-pointer flex-col justify-between overflow-clip rounded-xl border border-white/10 bg-white/5 p-1.5 transition-colors",
-        HOVER,
-        FOCUS,
-        src != null && "after:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-t after:from-black/60 after:to-transparent after:to-60%",
-        className,
-      ),
+      className: cx("q-prompt-box-upload", src != null && "q-prompt-box-upload-filled", className),
       ...(render == null ? { type: "button" as const } : {}),
       children: (
         <>
           {src != null ? (
             mediaType === "video" ? (
-              <video className="absolute inset-0 size-full object-cover" src={src} aria-label={alt} muted playsInline preload="metadata" />
+              <video
+                className="q-prompt-box-upload-media"
+                src={src}
+                aria-label={alt}
+                muted
+                playsInline
+                preload="metadata"
+              />
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="absolute inset-0 size-full object-cover" src={src} alt={alt} />
+              <img className="q-prompt-box-upload-media" src={src} alt={alt} />
             )
           ) : null}
-          <span className="relative z-[1] inline-flex size-5 items-center justify-center rounded-full bg-white/5 text-foreground shadow-[0_2px_1.5px_-0.5px_rgba(0,0,0,0.16)] backdrop-blur-[2.5px] [&_svg]:size-4">
-            {add ?? (
-              <svg viewBox="0 0 16 16" fill="none" aria-hidden width="16" height="16">
-                <path d="M8 3.5v9M3.5 8h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            )}
-          </span>
-          {label != null ? (
-            <span className="relative z-[1] self-start text-left text-[10px] font-bold uppercase leading-4 tracking-wide text-foreground">
-              {label}
-            </span>
-          ) : null}
+          <span className="q-prompt-box-upload-add">{add ?? <PlusGlyph />}</span>
+          {label != null ? <span className="q-prompt-box-upload-label">{label}</span> : null}
           {children}
         </>
       ),
@@ -255,37 +308,56 @@ function Upload({ label, src, mediaType = "image", alt = "", hidden = false, add
   return hidden ? null : element;
 }
 
-/* ── Generate ─────────────────────────────────────────────────────────────── */
+/** The small "+" corner glyph rendered inside an empty Upload tile by default. */
+function PlusGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden width="16" height="16">
+      <path d="M8 3.5v9M3.5 8h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* ── Generate (the special lime CTA) ───────────────────────────────────────── */
 export type PromptBoxGenerateProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
+  /** The credit cost shown beside the icon. */
   cost?: ReactNode;
+  /** A struck-through original cost (promo pricing). */
   oldCost?: ReactNode;
+  /** Leading glyph (defaults to the sparkles mark). */
   start?: ReactNode;
+  /** Button label (defaults to "Generate"). */
   children?: ReactNode;
+  /** Swap the host element. Defaults to a `<button>`. */
   render?: ReactElement;
 };
-
-function Generate({ cost, oldCost, start, children = "Generate", render, className, ref, ...props }: PromptBoxGenerateProps) {
+function Generate({
+  cost,
+  oldCost,
+  start,
+  children = "Generate",
+  render,
+  className,
+  ref,
+  ...props
+}: PromptBoxGenerateProps) {
   const hasMeta = cost != null || oldCost != null || start != null;
   return useRender({
     render,
     defaultTagName: "button",
     ref: ref as Ref<Element> | undefined,
     props: {
-      className: cn(
-        "studio-generate relative flex w-28 shrink-0 cursor-pointer flex-col items-center justify-center gap-1.5 self-stretch overflow-clip rounded-xl px-5 pb-6 pt-5 text-black transition-[filter,transform] duration-150 hover:brightness-[1.04] active:scale-[0.98] motion-reduce:active:scale-100",
-        FOCUS,
-        DISABLED,
-        className,
-      ),
+      className: cx("q-prompt-box-generate", className),
       ...(render == null ? { type: "button" as const } : {}),
       children: (
         <>
-          <span className="text-center text-sm font-bold uppercase leading-none">{children}</span>
+          <span className="q-prompt-box-generate-label">{children}</span>
           {hasMeta ? (
-            <span className="inline-flex items-center gap-1 text-black [&_svg]:size-4">
-              {start ?? <Sparkles fill="currentColor" />}
-              {oldCost != null ? <span className="text-xs font-medium text-black/30 line-through">{oldCost}</span> : null}
-              {cost != null ? <span className="text-xs font-semibold">{cost}</span> : null}
+            <span className="q-prompt-box-generate-meta">
+              {start ?? <SparklesGlyph fill="currentColor" />}
+              {oldCost != null ? (
+                <span className="q-prompt-box-generate-old">{oldCost}</span>
+              ) : null}
+              {cost != null ? <span className="q-prompt-box-generate-cost">{cost}</span> : null}
             </span>
           ) : null}
         </>
@@ -295,4 +367,15 @@ function Generate({ cost, oldCost, start, children = "Generate", render, classNa
   });
 }
 
-export const PromptBox = { Root, ModeRail, Mode, Body, Field, Actions, Pill, Uploads, Upload, Generate };
+export const PromptBox = {
+  Root,
+  ModeRail,
+  Mode,
+  Body,
+  Field,
+  Actions,
+  Pill,
+  Uploads,
+  Upload,
+  Generate,
+};

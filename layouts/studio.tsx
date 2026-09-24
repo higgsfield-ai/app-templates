@@ -71,7 +71,7 @@ function HomeState({ title, items, projects, dock, onCreateProject, onOpenAll, o
         <div ref={promptRef} className="flex flex-col items-center gap-8">
           <div className="flex flex-col items-center gap-5">
             <HeroComposition images={images} alt="Recent Studio outputs" />
-            <h1 className="max-w-[640px] text-center text-2xl font-bold uppercase tracking-tight">{title}</h1>
+            <h1 className="max-w-[640px] text-center text-q-accent-lg-bold uppercase">{title}</h1>
           </div>
           <StudioPromptBox {...dock} />
         </div>

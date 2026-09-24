@@ -171,7 +171,7 @@ export function StudioPromptBox({
           }}
         />
         {error != null ? (
-          <p className="px-1 pb-1 text-xs text-destructive" role="alert">
+          <p className="px-1 pb-1 text-q-caption-sm-medium text-q-state-error-fg" role="alert">
             {error}
           </p>
         ) : null}

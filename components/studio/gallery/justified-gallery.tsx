@@ -36,7 +36,7 @@ export function JustifiedGallery({ items, title = "Your generations", grouped = 
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <header className="flex shrink-0 items-center justify-between gap-4 px-0.5">
         <div className="flex min-w-0 items-center gap-2">
-          {title != null ? <h1 className="whitespace-nowrap text-base font-semibold">{title}</h1> : null}
+          {title != null ? <h1 className="whitespace-nowrap text-q-headline-sm-semi-bold">{title}</h1> : null}
           {gallery.loadingMore ? (
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Loader2 className="size-3 animate-spin" /> Loading
