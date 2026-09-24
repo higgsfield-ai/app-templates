@@ -1,30 +1,24 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'})
+import "./globals.css";
 
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+// Replace with the product's own identity when adapting the scaffold.
+export const metadata: Metadata = {
+  title: "Studio",
+  description: "Generate images and video with Higgsfield models.",
+};
+
+export const viewport: Viewport = { themeColor: "#0f0f10" };
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
-    >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+    <html lang="en" className={cn("dark antialiased font-sans", inter.variable)}>
+      <body className="min-h-svh bg-background text-foreground">{children}</body>
     </html>
-  )
+  );
 }
