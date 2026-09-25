@@ -72,10 +72,10 @@ function renderRegistry(names) {
     $schema: "https://ui.shadcn.com/schema/registry.json",
     items: [bundle, ...names.map((name) => {
       const source = readFileSync(join(MODELS_DIR, `${name}.ts`), "utf8");
-      // Object literals carry `id:`/`label:`; factory calls pass them positionally.
+      // Catalog object fields use two-space indentation; exclude nested mode IDs.
       const factory = [...source.matchAll(/(?:imageModel|videoModel)\(\s*"([^"]+)",\s*"([^"]+)"/g)];
-      const ids = [...matchAll(source, /\bid:\s*"([^"]+)"/g), ...factory.map((m) => m[1])];
-      const labels = [...matchAll(source, /label:\s*"([^"]+)"/g), ...factory.map((m) => m[2])];
+      const ids = [...matchAll(source, /^ {2}id:\s*"([^"]+)"/gm), ...factory.map((m) => m[1])];
+      const labels = [...matchAll(source, /^ {2}label:\s*"([^"]+)"/gm), ...factory.map((m) => m[2])];
       const surface = source.includes("imageModel(") || /surface:\s*"image"/.test(source) ? "image" : "video";
       const title = labels[0] ?? name;
       return {

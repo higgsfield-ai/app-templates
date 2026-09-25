@@ -1,22 +1,42 @@
-import { put } from "@vercel/blob/client";
+import { parseUploadTicket, requireUploadContentType } from "./upload-contract"
 
 export async function uploadMedia(file: File): Promise<{ url: string }> {
-  const res = await fetch("/api/blob", {
+  const contentType = requireUploadContentType(file.type)
+  const res = await fetch("/api/upload", {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      type: "blob.generate-client-token",
-      payload: { pathname: file.name, clientPayload: null, multipart: false },
-    }),
-  });
-  if (!res.ok) throw new Error("Failed to retrieve the client token");
-  const { clientToken, pathname } = (await res.json()) as {
-    clientToken?: unknown;
-    pathname?: unknown;
-  };
-  if (typeof clientToken !== "string" || typeof pathname !== "string") {
-    throw new Error("Failed to retrieve the client token");
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contentType }),
+  })
+  let payload: unknown
+  try {
+    payload = await res.json()
+  } catch {
+    throw new Error(
+      `Could not prepare reference upload (${res.status}). Try again.`
+    )
   }
-  const blob = await put(pathname, file, { access: "public", token: clientToken });
-  return { url: blob.url };
+  if (!res.ok) {
+    const message =
+      payload && typeof payload === "object" && "error" in payload
+        ? payload.error
+        : null
+    throw new Error(
+      typeof message === "string"
+        ? message
+        : `Could not prepare reference upload (${res.status}). Try again.`
+    )
+  }
+  const ticket = parseUploadTicket(payload, contentType)
+  // The storage request must not carry the platform key or browser cookies.
+  const uploaded = await fetch(ticket.upload_url, {
+    method: "PUT",
+    headers: ticket.upload_headers,
+    body: file,
+    credentials: "omit",
+  })
+  if (!uploaded.ok)
+    throw new Error(
+      `Reference upload failed (${uploaded.status}). Try uploading the file again.`
+    )
+  return { url: ticket.public_url }
 }

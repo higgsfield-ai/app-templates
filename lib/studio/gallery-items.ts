@@ -1,7 +1,7 @@
-import type { GalleryItem } from "@/components/studio/gallery/gallery-types";
-import type { AssetLibraryItem } from "@/lib/studio/uploads";
+import type { GalleryItem } from "@/components/studio/gallery/gallery-types"
+import type { AssetLibraryItem } from "@/lib/studio/uploads"
 
-import type { RunRecord } from "./history";
+import type { RunRecord } from "./history"
 
 /** One feed tile per result URL; a running or failed run is a single placeholder tile. */
 export function runToGalleryItems(run: RunRecord): GalleryItem[] {
@@ -17,7 +17,7 @@ export function runToGalleryItems(run: RunRecord): GalleryItem[] {
     settings: run.settings,
     groupId: "all",
     groupLabel: "",
-  };
+  }
   if (run.status !== "completed") {
     return [
       {
@@ -28,7 +28,7 @@ export function runToGalleryItems(run: RunRecord): GalleryItem[] {
         src: "",
         ...(run.error ? { failureLabel: run.error } : {}),
       },
-    ];
+    ]
   }
   return run.urls.map((url, index) => ({
     ...base,
@@ -37,11 +37,11 @@ export function runToGalleryItems(run: RunRecord): GalleryItem[] {
     status: "ready",
     src: run.surface === "video" ? "" : url,
     ...(run.surface === "video" ? { videoSrc: url } : {}),
-  }));
+  }))
 }
 
 export function runToLibraryItems(run: RunRecord): AssetLibraryItem[] {
-  if (run.status !== "completed") return [];
+  if (run.status !== "completed") return []
   return run.urls.map((url) => ({
     id: url,
     src: url,
@@ -49,5 +49,5 @@ export function runToLibraryItems(run: RunRecord): AssetLibraryItem[] {
     name: run.prompt.slice(0, 60),
     source: "generation",
     createdAt: run.createdAt,
-  }));
+  }))
 }

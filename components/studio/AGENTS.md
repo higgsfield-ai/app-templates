@@ -6,9 +6,15 @@ the component here, backward compatible.
 - **`PromptBox`** (`prompt-box.tsx`): composition primitive
   (`Root / ModeRail / Mode / Body / Field / Actions / Pill / Uploads / Upload /
   Generate`). `StudioPromptBox` is the prop-driven composition on top; it caps
-  inline settings at `MAX_INLINE_SETTINGS` and uploads at `MAX_UPLOADS`.
+  inline settings at `MAX_INLINE_SETTINGS`. Use one mixed reference picker with
+  compact thumbnails/audio chips; infer input mode from attachments instead of
+  showing mode or role-counter controls. Image menus offer frame roles only when
+  the model supports them. Frame/source slots appear only when needed. Preserve
+  every attachment, with removal, and block incompatible payloads.
 - **`AssetLibraryModal`** behind every "+" / add-media action: uploads tab plus
-  generated images/videos, filtered by the `accept` kinds of the target role.
+  supported image/video/audio tabs. Dispatch mixed selections by kind using
+  catalog capacities; enforce per-kind limits, not only the combined count.
+  Single frame/source slots replace one file.
 - **`SettingsDialog`** renders every `model.settings` field from the catalog
   (enum → Select, range → Slider, boolean → switch). Add settings in the model
   file, not here.

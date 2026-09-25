@@ -1,16 +1,24 @@
-import type { MediaRole, ModelEntry, PlatformPaths } from "./types";
+import type { MediaRole, ModelEntry, PlatformPaths } from "./types"
 
-const IMAGE_ASPECT = ["auto", "1:1", "4:3", "3:4", "16:9", "9:16"] as const;
-const VIDEO_ASPECT = ["16:9", "9:16", "1:1"] as const;
+const IMAGE_ASPECT = ["auto", "1:1", "4:3", "3:4", "16:9", "9:16"] as const
+const VIDEO_ASPECT = ["16:9", "9:16", "1:1"] as const
 
-type Extra = Pick<ModelEntry, "icon" | "order">;
+type Extra = Pick<ModelEntry, "icon" | "order">
 
 export function t2v(path: string): PlatformPaths {
-  if (!path.endsWith("/text-to-video")) return { text: path };
-  return { text: path, image: path.replace(/\/text-to-video$/, "/image-to-video") };
+  if (!path.endsWith("/text-to-video")) return { text: path }
+  return {
+    text: path,
+    image: path.replace(/\/text-to-video$/, "/image-to-video"),
+  }
 }
 
-export function imageModel(id: string, label: string, paths: PlatformPaths, extra: Extra = {}): ModelEntry {
+export function imageModel(
+  id: string,
+  label: string,
+  paths: PlatformPaths,
+  extra: Extra = {}
+): ModelEntry {
   return {
     id,
     surface: "image",
@@ -22,7 +30,7 @@ export function imageModel(id: string, label: string, paths: PlatformPaths, extr
     },
     paths,
     ...extra,
-  };
+  }
 }
 
 export function videoModel(
@@ -30,7 +38,7 @@ export function videoModel(
   label: string,
   roles: Partial<Record<MediaRole, number>>,
   paths: PlatformPaths,
-  extra: Extra = {},
+  extra: Extra = {}
 ): ModelEntry {
   return {
     id,
@@ -44,5 +52,5 @@ export function videoModel(
     },
     paths,
     ...extra,
-  };
+  }
 }

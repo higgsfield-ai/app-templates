@@ -1,14 +1,19 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react"
 
-import { cancelGeneration, submitGeneration } from "@/generation/actions";
-import { getModel } from "@/generation/catalog";
-import type { GenerationPlane } from "@/generation/catalog";
-import type { GenerationStatus } from "@/generation/platform";
-import { stopWatching, watchRequest } from "@/generation/poll";
+import { cancelGeneration, submitGeneration } from "@/generation/actions"
+import { getModel } from "@/generation/catalog"
+import type { GenerationPlane } from "@/generation/catalog"
+import type { GenerationStatus } from "@/generation/platform"
+import { stopWatching, watchRequest } from "@/generation/poll"
 
-import { aspectFromSettings, loadHistory, saveHistory, type RunRecord } from "./history";
+import {
+  aspectFromSettings,
+  loadHistory,
+  saveHistory,
+  type RunRecord,
+} from "./history"
 
 /**
  * The studio's generation controller: submits planes to the platform through
@@ -16,51 +21,60 @@ import { aspectFromSettings, loadHistory, saveHistory, type RunRecord } from "./
  * polls for runs that were still in flight when the page reloaded.
  */
 export function useRuns() {
-  const [records, setRecords] = useState<RunRecord[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const recordsRef = useRef(records);
-  recordsRef.current = records;
+  const [records, setRecords] = useState<RunRecord[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const update = useCallback((id: string, patch: Partial<RunRecord>) => {
-    setRecords((current) => current.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  }, []);
+    setRecords((current) =>
+      current.map((r) => (r.id === id ? { ...r, ...patch } : r))
+    )
+  }, [])
 
   const watch = useCallback(
     (record: RunRecord) => {
-      watchRequest(record.requestId, { deadline: record.createdAt + 15 * 60_000 })
+      watchRequest(record.requestId, {
+        deadline: record.createdAt + 15 * 60_000,
+      })
         .then((status) => update(record.id, settle(status)))
         .catch((caught: unknown) => {
-          update(record.id, { status: "failed", error: caught instanceof Error ? caught.message : String(caught) });
-        });
+          update(record.id, {
+            status: "failed",
+            error: caught instanceof Error ? caught.message : String(caught),
+          })
+        })
     },
-    [update],
-  );
+    [update]
+  )
 
   useEffect(() => {
-    let alive = true;
+    let alive = true
     void loadHistory().then((stored) => {
-      if (!alive) return;
-      setRecords(stored);
-      setLoaded(true);
-      for (const record of stored) if (record.status === "running") watch(record);
-    });
+      if (!alive) return
+      setRecords(stored)
+      setLoaded(true)
+      for (const record of stored)
+        if (record.status === "running") watch(record)
+    })
     return () => {
-      alive = false;
-      stopWatching();
-    };
-  }, [watch]);
+      alive = false
+      stopWatching()
+    }
+  }, [watch])
 
   useEffect(() => {
-    if (loaded) void saveHistory(records);
-  }, [loaded, records]);
+    if (loaded) void saveHistory(records)
+  }, [loaded, records])
 
   const submit = useCallback(
-    async (plane: GenerationPlane, projectId?: string): Promise<RunRecord | null> => {
-      setError(null);
-      const model = getModel(plane.model);
+    async (
+      plane: GenerationPlane,
+      projectId?: string
+    ): Promise<RunRecord | null> => {
+      setError(null)
+      const model = getModel(plane.model)
       try {
-        const queued = await submitGeneration(plane);
+        const queued = await submitGeneration(plane)
         const record: RunRecord = {
           id: queued.requestId,
           requestId: queued.requestId,
@@ -74,58 +88,65 @@ export function useRuns() {
           status: "running",
           urls: [],
           createdAt: Date.now(),
-        };
-        setRecords((current) => [record, ...current]);
-        watch(record);
-        return record;
+        }
+        setRecords((current) => [record, ...current])
+        watch(record)
+        return record
       } catch (caught) {
-        setError(caught instanceof Error ? caught.message : String(caught));
-        return null;
+        setError(caught instanceof Error ? caught.message : String(caught))
+        return null
       }
     },
-    [watch],
-  );
+    [watch]
+  )
 
   const cancel = useCallback(
     async (id: string) => {
-      const record = recordsRef.current.find((r) => r.id === id);
-      if (!record || record.status !== "running") return;
+      const record = records.find((r) => r.id === id)
+      if (!record || record.status !== "running") return
       try {
-        await cancelGeneration({ requestIds: [record.requestId] });
-        update(id, { status: "failed", error: "Canceled" });
+        await cancelGeneration({ requestIds: [record.requestId] })
+        update(id, { status: "failed", error: "Canceled" })
       } catch (caught) {
-        setError(caught instanceof Error ? caught.message : String(caught));
+        setError(caught instanceof Error ? caught.message : String(caught))
       }
     },
-    [update],
-  );
+    [records, update]
+  )
 
   const remove = useCallback((id: string) => {
-    setRecords((current) => current.filter((r) => r.id !== id));
-  }, []);
+    setRecords((current) => current.filter((r) => r.id !== id))
+  }, [])
 
-  const running = records.filter((r) => r.status === "running");
+  const running = records.filter((r) => r.status === "running")
 
-  return { records, running, loaded, error, submit, cancel, remove, setError };
+  return { records, running, loaded, error, submit, cancel, remove, setError }
 }
 
 function settle(status: GenerationStatus): Partial<RunRecord> {
-  const urls = [...(status.images?.map((i) => i.url) ?? []), ...(status.video ? [status.video.url] : [])];
-  if (status.status === "completed" && urls.length > 0) return { status: "completed", urls };
+  const urls = [
+    ...(status.images?.map((i) => i.url) ?? []),
+    ...(status.video ? [status.video.url] : []),
+  ]
+  if (status.status === "completed" && urls.length > 0)
+    return { status: "completed", urls }
   const reason =
     status.status === "nsfw"
       ? "Blocked by the content filter"
       : status.status === "canceled"
         ? "Canceled"
-        : describeError(status.error) ?? "The generation did not produce media";
-  return { status: "failed", error: reason };
+        : (describeError(status.error) ??
+          "The generation did not produce media")
+  return { status: "failed", error: reason }
 }
 
 function describeError(error: unknown): string | undefined {
-  if (typeof error === "string") return error;
+  if (typeof error === "string") return error
   if (error && typeof error === "object") {
-    const detail = (error as { detail?: unknown; message?: unknown }).detail ?? (error as { message?: unknown }).message;
-    if (typeof detail === "string") return detail;
+    const detail =
+      (error as { detail?: unknown; message?: unknown }).detail ??
+      (error as { message?: unknown }).message
+    if (typeof detail === "string") return detail
   }
-  return undefined;
+  return undefined
 }

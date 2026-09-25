@@ -143,7 +143,7 @@
 }
 
 @utility q-prompt-box-field {
-  --q-prompt-box-field-min-height: calc(var(--hf-space-1200) + var(--hf-space-100));
+  --q-prompt-box-field-min-height: var(--hf-space-1200);
 
   flex: 1 1 auto;
   width: 100%;
@@ -250,6 +250,7 @@
 @utility q-prompt-box-uploads {
   display: flex;
   flex-shrink: 0;
+  align-self: flex-end;
   align-items: flex-start;
   gap: var(--hf-space-150);
 }
@@ -321,6 +322,10 @@
   position: relative;
   z-index: 1;
   align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: left;
   color: var(--hf-color-text-primary);
   text-transform: uppercase;
@@ -339,8 +344,9 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  align-self: stretch;
+  align-self: flex-end;
   gap: var(--hf-space-150);
+  height: var(--hf-space-2000);
   width: var(--q-prompt-box-generate-width);
   padding: var(--hf-space-500) var(--hf-space-500) var(--hf-space-600);
   overflow: clip;
@@ -408,6 +414,15 @@
 
 @utility q-prompt-box-generate-cost {
   @apply text-q-caption-sm-semi-bold;
+}
+
+@media (max-width: 640px) {
+  .q-prompt-box { flex-direction: column; align-items: stretch; padding: var(--hf-space-100); }
+  .q-prompt-box-mode-rail { flex-direction: row; width: max-content; }
+  .q-prompt-box-mode { width: 3.75rem; height: 2.75rem; }
+  .q-prompt-box-dock-surface { flex-wrap: wrap; }
+  .q-prompt-box-body { flex-basis: 100%; }
+  .q-prompt-box-generate { width: 100%; height: 3rem; padding: var(--hf-space-300); }
 }
 
 @media (prefers-reduced-motion: reduce) {

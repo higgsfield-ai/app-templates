@@ -3,9 +3,39 @@
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
-
-import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+
+/**
+ * Dialog — Base UI `Dialog` with the Quanta Modal skin (q-modal-* from
+ * styles/quanta/components/modal.css): dim backdrop, centered frosted glass
+ * card, a 40px header row, an inset body "workspace" and a 48px footer.
+ *
+ *   <Dialog>
+ *     <DialogTrigger render={<Button>Open</Button>} />
+ *     <DialogContent size="md">
+ *       <DialogHeader>
+ *         <DialogTitle>New element</DialogTitle>
+ *         <DialogDescription>Optional helper text</DialogDescription>
+ *       </DialogHeader>
+ *       <DialogBody>…</DialogBody>
+ *       <DialogFooter>
+ *         <Button variant="secondary">Cancel</Button>
+ *         <Button>Confirm</Button>
+ *       </DialogFooter>
+ *     </DialogContent>
+ *   </Dialog>
+ */
+
+export type DialogSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl"
+
+const SIZE_CLASS: Record<DialogSize, string> = {
+  xs: "q-modal-size-xs",
+  sm: "q-modal-size-sm",
+  md: "q-modal-size-md",
+  lg: "q-modal-size-lg",
+  xl: "q-modal-size-xl",
+  "2xl": "q-modal-size-2xl",
+}
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -30,10 +60,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className
-      )}
+      className={cn("q-modal-backdrop", className)}
       {...props}
     />
   )
@@ -42,77 +69,167 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
-  showCloseButton = true,
+  size = "md",
+  initialFocus,
   ...props
 }: DialogPrimitive.Popup.Props & {
-  showCloseButton?: boolean
+  /** Card width preset: xs 349, sm 469, md 640, lg 708, xl 946, 2xl 1392px. */
+  size?: DialogSize
 }) {
+  // Focus the card itself so opening doesn't ring the close button.
+  const popupRef = React.useRef<HTMLDivElement>(null)
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
+        ref={popupRef}
+        initialFocus={initialFocus ?? popupRef}
         data-slot="dialog-content"
-        className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className
-        )}
+        className={cn("q-modal", SIZE_CLASS[size], className)}
         {...props}
       >
         {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            render={
-              <Button
-                variant="ghost"
-                className="absolute top-2 right-2"
-                size="icon-sm"
-              />
-            }
-          >
-            <XIcon
-            />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        )}
       </DialogPrimitive.Popup>
     </DialogPortal>
   )
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+/** Round dismiss disc for the header's trailing end. */
+function DialogCloseButton({
+  className,
+  children,
+  ...props
+}: DialogPrimitive.Close.Props) {
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      aria-label="Close"
+      className={cn("q-close q-close-md", className)}
+      {...props}
+    >
+      {children ?? <XIcon className="size-5" />}
+    </DialogPrimitive.Close>
+  )
+}
+
+/**
+ * Header row: title + trailing close disc. A `DialogDescription` child is
+ * lifted out of the 40px row and rendered underneath it.
+ */
+function DialogHeader({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<"div"> & { showCloseButton?: boolean }) {
+  const nodes = React.Children.toArray(children)
+  const descriptions = nodes.filter(
+    (node) => React.isValidElement(node) && node.type === DialogDescription
+  )
+  const rest = nodes.filter((node) => !descriptions.includes(node))
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex shrink-0 flex-col gap-1", className)}
+      {...props}
+    >
+      <div className="q-modal-header">
+        {rest}
+        {showCloseButton ? <DialogCloseButton /> : null}
+      </div>
+      {descriptions}
+    </div>
+  )
+}
+
+/** Pushes following header/footer controls to the trailing end. */
+function DialogSpacer({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      aria-hidden
+      data-slot="dialog-spacer"
+      className={cn("q-modal-spacer", className)}
       {...props}
     />
   )
 }
 
+/** The lighter inset pane inside the body. */
+function DialogWorkspace({
+  className,
+  padded = true,
+  ...props
+}: React.ComponentProps<"div"> & { padded?: boolean }) {
+  return (
+    <div
+      data-slot="dialog-workspace"
+      className={cn(
+        "q-modal-workspace",
+        padded && "q-modal-workspace-padded",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * Scrollable region between header and footer. Plain content is wrapped in a
+ * single `DialogWorkspace`; nest your own workspaces for split layouts.
+ */
+function DialogBody({
+  className,
+  padded = true,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & { padded?: boolean }) {
+  const hasWorkspace = (nodes: React.ReactNode): boolean =>
+    React.Children.toArray(nodes).some(
+      (child) =>
+        React.isValidElement(child) &&
+        (child.type === DialogWorkspace ||
+          hasWorkspace(
+            (child.props as { children?: React.ReactNode }).children
+          ))
+    )
+  return (
+    <div
+      data-slot="dialog-body"
+      className={cn("q-modal-body", className)}
+      {...props}
+    >
+      {hasWorkspace(children) ? (
+        children
+      ) : (
+        <DialogWorkspace padded={padded}>{children}</DialogWorkspace>
+      )}
+    </div>
+  )
+}
+
+/** 48px footer: optional caption on the left, actions pushed right. */
 function DialogFooter({
   className,
-  showCloseButton = false,
+  caption,
+  full = false,
   children,
   ...props
 }: React.ComponentProps<"div"> & {
-  showCloseButton?: boolean
+  caption?: React.ReactNode
+  full?: boolean
 }) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
-        className
-      )}
+      className={cn("q-modal-footer", full && "q-modal-footer-full", className)}
       {...props}
     >
-      {children}
-      {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
-          Close
-        </DialogPrimitive.Close>
-      )}
+      {caption != null ? (
+        <div className="q-modal-caption">{caption}</div>
+      ) : null}
+      <div className={cn("q-modal-actions", full && "q-modal-actions-full")}>
+        {children}
+      </div>
     </div>
   )
 }
@@ -121,10 +238,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn(
-        "font-heading text-base leading-none font-medium",
-        className
-      )}
+      className={cn("q-modal-title", className)}
       {...props}
     />
   )
@@ -137,10 +251,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
-        className
-      )}
+      className={cn("q-modal-description", className)}
       {...props}
     />
   )
@@ -148,13 +259,17 @@ function DialogDescription({
 
 export {
   Dialog,
+  DialogBody,
   DialogClose,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogOverlay,
   DialogPortal,
+  DialogSpacer,
   DialogTitle,
   DialogTrigger,
+  DialogWorkspace,
 }

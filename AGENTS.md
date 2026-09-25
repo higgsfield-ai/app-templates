@@ -7,7 +7,7 @@ end. Rendering the shipped examples is not completion.
 ## Layout
 
 - `app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `globals.css`,
-  `api/blob/route.ts` for reference uploads).
+  `api/upload/route.ts` for signed reference-upload URLs).
 - `layouts/studio.tsx` — the Studio screen. Read `layouts/AGENTS.md` before
   changing its structure.
 - `components/studio/` — Studio building blocks. Read
@@ -23,17 +23,20 @@ end. Rendering the shipped examples is not completion.
 
 ## Runtime boundaries — preserve these
 
-- `generation/actions.ts` is the only server boundary. The platform key lives
-  in an httpOnly cookie (`generation/credentials.ts`); `HF_API_BASE_URL` is read
-  server-side only. Never call `platform.higgsfield.ai` from the browser.
+- `generation/actions.ts` and `app/api/upload/route.ts` are the server boundaries.
+  The platform key lives in an httpOnly cookie (`generation/credentials.ts`);
+  `HF_API_BASE_URL` is read server-side only. Authenticated platform calls stay
+  on the server.
 - Generate and Cancel both reach the platform (`submitGeneration`,
   `cancelGeneration`). Do not replace cancel with "stop polling".
 - Models come from `generation/catalog`. To add one, drop a file in
   `generation/catalog/models/` (or `pnpm dlx shadcn@latest add
   higgsfield-ai/app-templates/<model>`); the dev server regenerates the barrel.
   Never hand-edit `generation/catalog/models.generated.ts`.
-- Reference media is uploaded through `app/api/blob/route.ts` (Vercel Blob,
-  `BLOB_READ_WRITE_TOKEN`). Generation submits use the returned public URL.
+- Reference uploads request a signed URL through `app/api/upload/route.ts`
+  using the saved platform key. The browser PUTs the file with every returned
+  upload header and no credentials. Record the public URL only after success;
+  never log signed URLs. No separate storage token is needed.
 - History and projects are browser-local (`lib/studio/history.ts`,
   `lib/studio/projects.ts`). If the product needs shared or server-side
   persistence, replace those modules; keep the `useRuns` interface.

@@ -26,6 +26,16 @@
 @import "./tailwind/gradient.css";
 @import "./tailwind/slot.css";
 
+/* Component skins (q-menu-*, q-dropdown-*, q-select-*, q-modal-*, q-tabs-*,
+ * q-field-*, q-close): applied by components/ui/* over the Base UI primitives. */
+@import "./components/menu.css";
+@import "./components/dropdown.css";
+@import "./components/select.css";
+@import "./components/modal.css";
+@import "./components/close-button.css";
+@import "./components/tabs.css";
+@import "./components/input.css";
+
 /* Keyboard focus ring (from quanta button.css): background-colored gap + lime ring. */
 @utility q-focus-ring {
   &:focus-visible {

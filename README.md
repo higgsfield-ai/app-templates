@@ -33,7 +33,10 @@ cd my-studio && pnpm dev
 
 Open http://localhost:3000, click **Add key** in the sidebar and paste your
 platform key (`id:secret`) from https://cloud.higgsfield.ai. The key is stored
-in an httpOnly cookie; the browser never talks to the platform directly.
+in an httpOnly cookie; authenticated platform calls stay on the server.
+Reference uploads use the same key to obtain a signed Higgsfield storage URL.
+The browser uploads directly with the returned headers, without receiving the
+key. No separate storage account or token is required.
 
 The repo is private for now, so the CLI needs GitHub access: `gh auth login`
 or `GH_TOKEN` with read access to `higgsfield-ai/app-templates`.
@@ -61,7 +64,6 @@ Pin a version with `#ref`: `higgsfield-ai/app-templates/studio#v1.0.0`.
 | Variable                | Purpose                                                        |
 | ----------------------- | -------------------------------------------------------------- |
 | `HF_API_BASE_URL`       | Platform API base, prefilled with `https://platform.higgsfield.ai` |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token; only needed for reference-media uploads     |
 
 ## Working on the templates
 
@@ -74,6 +76,7 @@ cd app-templates && pnpm install && cp .env.example .env && pnpm dev
 | --------------------- | --------------------------------------------------------------- |
 | `pnpm dev`            | Dev server on :3000 (also serves the built registry at `/r/*`) |
 | `pnpm typecheck`      | `tsc --noEmit`                                                  |
+| `pnpm test`           | Upload contract and error-path tests (Node.js 22.15+)           |
 | `pnpm models`         | Regenerate the models barrel and `models/registry.json`         |
 | `pnpm registry:build` | `pnpm models` + `shadcn build` → `public/r/*.json`              |
 | `pnpm build`          | Production build (runs `registry:build` first)                  |
@@ -93,7 +96,7 @@ pnpm dlx shadcn@latest add  http://localhost:3000/r/seedance-2.5.json
 ## Layout
 
 ```
-app/                     Next.js App Router, globals.css, /api/blob upload route
+app/                     Next.js App Router, globals.css, /api/upload signed URL route
 layouts/studio.tsx       The Studio screen (read layouts/AGENTS.md)
 components/studio/       Prompt dock, gallery, dialogs, presets (read components/studio/AGENTS.md)
 components/ui/           shadcn primitives (Base UI)

@@ -1,20 +1,62 @@
 "use client"
 
+import * as React from "react"
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
-import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
+
+/**
+ * Tabs — Base UI `Tabs` with the Quanta skin (q-tabs-* from
+ * styles/quanta/components/tabs.css). `variant` picks the Figma family:
+ * `underline` (default), `pill` (text pills on a sliding fill), `segmented`
+ * (glass segmented control, use `shape="pill"` for the rounded track), `soft`.
+ */
+
+export type TabsVariant = "underline" | "pill" | "segmented" | "soft"
+export type TabsShape = "rounded" | "pill" | "icon"
+export type TabsTone =
+  "default" | "accent" | "glass" | "solid" | "brandSoft" | "brand"
+
+const VARIANT_CLASS: Record<TabsVariant, string> = {
+  underline: "q-tabs-underline",
+  pill: "q-tabs-pill",
+  segmented: "q-tabs-segmented",
+  soft: "q-tabs-soft",
+}
+const SHAPE_CLASS: Record<TabsShape, string> = {
+  rounded: "q-tabs-shape-rounded",
+  pill: "q-tabs-shape-pill",
+  icon: "q-tabs-shape-icon",
+}
+const TONE_CLASS: Record<TabsTone, string> = {
+  default: "q-tabs-tone-default",
+  accent: "q-tabs-tone-accent",
+  glass: "q-tabs-tone-glass",
+  solid: "q-tabs-tone-solid",
+  brandSoft: "q-tabs-tone-brand-soft",
+  brand: "q-tabs-tone-brand",
+}
 
 function Tabs({
   className,
-  orientation = "horizontal",
+  variant = "underline",
+  shape = "rounded",
+  tone,
   ...props
-}: TabsPrimitive.Root.Props) {
+}: TabsPrimitive.Root.Props & {
+  variant?: TabsVariant
+  shape?: TabsShape
+  tone?: TabsTone
+}) {
+  const resolvedTone = tone ?? (variant === "segmented" ? "glass" : "default")
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
-      data-orientation={orientation}
       className={cn(
-        "group/tabs flex gap-2 data-horizontal:flex-col",
+        "q-tabs",
+        VARIANT_CLASS[variant],
+        SHAPE_CLASS[shape],
+        "q-tabs-surface-glass",
+        TONE_CLASS[resolvedTone],
         className
       )}
       {...props}
@@ -22,49 +64,86 @@ function Tabs({
   )
 }
 
-const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-horizontal/tabs:h-8 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
-  {
-    variants: {
-      variant: {
-        default: "bg-muted",
-        line: "gap-1 bg-transparent",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
 function TabsList({
   className,
-  variant = "default",
+  children,
+  indicator = true,
+  fullWidth = false,
   ...props
-}: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
+}: TabsPrimitive.List.Props & { indicator?: boolean; fullWidth?: boolean }) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
+      className={cn("q-tabs-list", fullWidth && "q-tabs-list-fill", className)}
       {...props}
-    />
+    >
+      {children}
+      {indicator ? (
+        <TabsPrimitive.Indicator
+          className="q-tabs-indicator"
+          renderBeforeHydration
+        />
+      ) : null}
+    </TabsPrimitive.List>
   )
 }
 
-function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
+/** Wrap text in a width-locking span so weight changes on select don't shift neighbours. */
+function lockTextWidth(children: React.ReactNode): React.ReactNode {
+  return React.Children.map(children, (child) =>
+    typeof child === "string" || typeof child === "number" ? (
+      <span className="q-tabs-tab-text" data-text={String(child)}>
+        {child}
+      </span>
+    ) : (
+      child
+    )
+  )
+}
+
+function TabsTrigger({
+  className,
+  children,
+  start,
+  end,
+  iconOnly = false,
+  ...props
+}: TabsPrimitive.Tab.Props & {
+  start?: React.ReactNode
+  end?: React.ReactNode
+  iconOnly?: boolean
+}) {
+  const slots = start != null || end != null
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 dark:text-muted-foreground dark:hover:text-foreground group-data-[variant=default]/tabs-list:data-active:shadow-sm group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
-        "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
-        "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        "q-tabs-tab",
+        iconOnly && "q-tabs-tab-icon-only",
         className
       )}
       {...props}
-    />
+    >
+      <span className="q-tabs-tab-content">
+        {slots ? (
+          <>
+            {start != null ? (
+              <span className="q-tabs-tab-icon">{start}</span>
+            ) : null}
+            {children != null ? (
+              <span className="q-tabs-tab-label">
+                {lockTextWidth(children)}
+              </span>
+            ) : null}
+            {end != null ? (
+              <span className="q-tabs-tab-icon">{end}</span>
+            ) : null}
+          </>
+        ) : (
+          lockTextWidth(children)
+        )}
+      </span>
+    </TabsPrimitive.Tab>
   )
 }
 
@@ -72,10 +151,10 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn("flex-1 text-sm outline-none", className)}
+      className={cn("q-tabs-panel", className)}
       {...props}
     />
   )
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }
+export { Tabs, TabsList, TabsTrigger, TabsContent }

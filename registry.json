@@ -29,13 +29,12 @@
       "dependencies": [
         "@base-ui/react@^1.8.0",
         "@tanstack/react-virtual@^3.14.13",
-        "@vercel/blob@^2.8.0",
         "class-variance-authority@^0.7.1",
         "zustand@^5.0.15"
       ],
+      "devDependencies": ["eslint@^9.39.5"],
       "envVars": {
-        "HF_API_BASE_URL": "https://platform.higgsfield.ai",
-        "BLOB_READ_WRITE_TOKEN": ""
+        "HF_API_BASE_URL": "https://platform.higgsfield.ai"
       },
       "files": [
         {
@@ -44,9 +43,9 @@
           "target": "~/AGENTS.md"
         },
         {
-          "path": "app/api/blob/route.ts",
+          "path": "app/api/upload/route.ts",
           "type": "registry:file",
-          "target": "~/app/api/blob/route.ts"
+          "target": "~/app/api/upload/route.ts"
         },
         {
           "path": "app/globals.css",
@@ -244,6 +243,11 @@
           "target": "~/generation/catalog/index.ts"
         },
         {
+          "path": "generation/catalog/media-inputs.ts",
+          "type": "registry:file",
+          "target": "~/generation/catalog/media-inputs.ts"
+        },
+        {
           "path": "generation/catalog/mappers.ts",
           "type": "registry:file",
           "target": "~/generation/catalog/mappers.ts"
@@ -319,6 +323,11 @@
           "target": "~/generation/to-platform.ts"
         },
         {
+          "path": "generation/upload-contract.ts",
+          "type": "registry:file",
+          "target": "~/generation/upload-contract.ts"
+        },
+        {
           "path": "generation/upload.ts",
           "type": "registry:file",
           "target": "~/generation/upload.ts"
@@ -377,6 +386,11 @@
           "path": "proxy.ts",
           "type": "registry:file",
           "target": "~/proxy.ts"
+        },
+        {
+          "path": "public/model-icons/seedance.svg",
+          "type": "registry:file",
+          "target": "~/public/model-icons/seedance.svg"
         },
         {
           "path": "public/model-icons/flux.svg",
@@ -472,6 +486,41 @@
           "path": "styles/quanta/components.css",
           "type": "registry:file",
           "target": "~/styles/quanta/components.css"
+        },
+        {
+          "path": "styles/quanta/components/close-button.css",
+          "type": "registry:file",
+          "target": "~/styles/quanta/components/close-button.css"
+        },
+        {
+          "path": "styles/quanta/components/dropdown.css",
+          "type": "registry:file",
+          "target": "~/styles/quanta/components/dropdown.css"
+        },
+        {
+          "path": "styles/quanta/components/input.css",
+          "type": "registry:file",
+          "target": "~/styles/quanta/components/input.css"
+        },
+        {
+          "path": "styles/quanta/components/menu.css",
+          "type": "registry:file",
+          "target": "~/styles/quanta/components/menu.css"
+        },
+        {
+          "path": "styles/quanta/components/modal.css",
+          "type": "registry:file",
+          "target": "~/styles/quanta/components/modal.css"
+        },
+        {
+          "path": "styles/quanta/components/select.css",
+          "type": "registry:file",
+          "target": "~/styles/quanta/components/select.css"
+        },
+        {
+          "path": "styles/quanta/components/tabs.css",
+          "type": "registry:file",
+          "target": "~/styles/quanta/components/tabs.css"
         },
         {
           "path": "styles/quanta/index.css",
@@ -629,7 +678,7 @@
           "target": "~/styles/theme.css"
         }
       ],
-      "docs": "Studio is installed. Next steps:\n\n  1. pnpm dev \u2014 open http://localhost:3000\n  2. Click \"Add key\" in the sidebar and paste your platform key (id:secret) from https://cloud.higgsfield.ai\n  3. Generate.\n\nModels live in generation/catalog/models/ (one file each); the dev server picks up new ones live:\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/models          # every model\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/seedance-2.5    # one model\n  pnpm dlx shadcn@latest list higgsfield-ai/app-templates                # see what is available\n\nEnv (.env.local): HF_API_BASE_URL is set to https://platform.higgsfield.ai. BLOB_READ_WRITE_TOKEN (Vercel Blob) is only needed for reference-media uploads.\n\nRead AGENTS.md before adapting the template.\n"
+      "docs": "Studio is installed. Next steps:\n\n  1. pnpm dev \u2014 open http://localhost:3000\n  2. Click \"Add key\" in the sidebar and paste your platform key (id:secret) from https://cloud.higgsfield.ai\n  3. Generate.\n\nModels live in generation/catalog/models/ (one file each); the dev server picks up new ones live:\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/models          # every model\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/seedance-2.5    # one model\n  pnpm dlx shadcn@latest list higgsfield-ai/app-templates                # see what is available\n\nEnv (.env.local): HF_API_BASE_URL is set to https://platform.higgsfield.ai. Reference uploads use your saved Higgsfield key and signed storage URLs; no separate storage token is needed.\n\nRead AGENTS.md before adapting the template.\n"
     }
   ],
   "include": [

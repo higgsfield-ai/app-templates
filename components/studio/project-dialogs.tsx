@@ -1,50 +1,85 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import type { FormEvent, ReactElement } from "react";
-import { EllipsisVertical, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react"
+import type { FormEvent, ReactElement } from "react"
+import { EllipsisVertical, Pencil, Trash2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 /** Name form shared by create and rename. */
-function NameDialog({ trigger, title, description, initial = "", submitLabel, onSubmit, open, onOpenChange }: {
-  trigger?: ReactElement;
-  title: string;
-  description: string;
-  initial?: string;
-  submitLabel: string;
-  onSubmit: (name: string) => void | Promise<void>;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+function NameDialog({
+  trigger,
+  title,
+  description,
+  initial = "",
+  submitLabel,
+  onSubmit,
+  open,
+  onOpenChange,
+}: {
+  trigger?: ReactElement
+  title: string
+  description: string
+  initial?: string
+  submitLabel: string
+  onSubmit: (name: string) => void | Promise<void>
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
-  const [name, setName] = useState(initial);
-  const [busy, setBusy] = useState(false);
+  const [name, setName] = useState(initial)
+  const [busy, setBusy] = useState(false)
   const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!name.trim()) return;
-    setBusy(true);
+    event.preventDefault()
+    if (!name.trim()) return
+    setBusy(true)
     try {
-      await onSubmit(name.trim());
-      onOpenChange?.(false);
-      setName("");
+      await onSubmit(name.trim())
+      onOpenChange?.(false)
+      setName("")
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger ? <DialogTrigger render={trigger} /> : null}
-      <DialogContent className="sm:max-w-sm">
-        <form onSubmit={submit} className="flex flex-col gap-4">
+      <DialogContent size="xs">
+        <form onSubmit={submit} className="contents">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Project name" aria-label="Project name" maxLength={80} />
+          <DialogBody>
+            <div className="flex flex-col gap-3">
+              <p className="text-q-body-sm-regular text-q-text-secondary">
+                {description}
+              </p>
+              <Input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Project name"
+                aria-label="Project name"
+                maxLength={80}
+              />
+            </div>
+          </DialogBody>
           <DialogFooter>
             <Button type="submit" disabled={busy || !name.trim()}>
               {submitLabel}
@@ -53,11 +88,17 @@ function NameDialog({ trigger, title, description, initial = "", submitLabel, on
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
-export function ProjectCreateModal({ trigger, onCreate }: { trigger: ReactElement; onCreate: (name: string) => void | Promise<void> }) {
-  const [open, setOpen] = useState(false);
+export function ProjectCreateModal({
+  trigger,
+  onCreate,
+}: {
+  trigger: ReactElement
+  onCreate: (name: string) => void | Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
   return (
     <NameDialog
       trigger={trigger}
@@ -68,24 +109,29 @@ export function ProjectCreateModal({ trigger, onCreate }: { trigger: ReactElemen
       submitLabel="Create"
       onSubmit={onCreate}
     />
-  );
+  )
 }
 
 /** Hover ⋯ menu on a sidebar project row: rename or delete. */
-export function ProjectActions({ projectName, onRename, onDelete, className }: {
-  projectName: string;
-  onRename: (name: string) => void | Promise<void>;
-  onDelete: () => void | Promise<void>;
-  className?: string;
+export function ProjectActions({
+  projectName,
+  onRename,
+  onDelete,
+  className,
+}: {
+  projectName: string
+  onRename: (name: string) => void | Promise<void>
+  onDelete: () => void | Promise<void>
+  className?: string
 }) {
-  const [renaming, setRenaming] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [renaming, setRenaming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={`Actions for ${projectName}`}
-          className={cn("inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-white/8 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
+          className={cn("q-close q-close-sm", className)}
           onClick={(e) => e.stopPropagation()}
         >
           <EllipsisVertical className="size-4" />
@@ -94,7 +140,10 @@ export function ProjectActions({ projectName, onRename, onDelete, className }: {
           <DropdownMenuItem onClick={() => setRenaming(true)}>
             <Pencil /> Rename
           </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => setDeleting(true)}
+          >
             <Trash2 /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -109,11 +158,15 @@ export function ProjectActions({ projectName, onRename, onDelete, className }: {
         onSubmit={onRename}
       />
       <Dialog open={deleting} onOpenChange={setDeleting}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent size="xs">
           <DialogHeader>
             <DialogTitle>Delete “{projectName}”?</DialogTitle>
-            <DialogDescription>The project goes away. Its generations stay in All Generations.</DialogDescription>
           </DialogHeader>
+          <DialogBody>
+            <p className="text-q-body-sm-regular text-q-text-secondary">
+              The project goes away. Its generations stay in All Generations.
+            </p>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleting(false)}>
               Cancel
@@ -121,8 +174,8 @@ export function ProjectActions({ projectName, onRename, onDelete, className }: {
             <Button
               variant="destructive"
               onClick={async () => {
-                await onDelete();
-                setDeleting(false);
+                await onDelete()
+                setDeleting(false)
               }}
             >
               Delete
@@ -131,5 +184,5 @@ export function ProjectActions({ projectName, onRename, onDelete, className }: {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

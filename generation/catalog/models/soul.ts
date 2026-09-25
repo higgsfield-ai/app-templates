@@ -1,12 +1,12 @@
-import { SOUL_ASPECT } from "../tokens";
-import type { GenerationPlane, ModelEntry, PlatformRequest } from "../types";
+import { SOUL_ASPECT } from "../tokens"
+import type { GenerationPlane, ModelEntry, PlatformRequest } from "../types"
 
 const soulSettings = {
   aspectRatio: { type: "enum", values: SOUL_ASPECT, default: "1:1" },
   resolution: { type: "enum", values: ["720p", "1080p"], default: "720p" },
   batchSize: { type: "enum", values: ["1", "4"], default: "1" },
   enhancePrompt: { type: "boolean", default: false },
-} as const satisfies ModelEntry["settings"];
+} as const satisfies ModelEntry["settings"]
 
 function mapSoul(plane: GenerationPlane, path: string): PlatformRequest {
   return {
@@ -18,7 +18,7 @@ function mapSoul(plane: GenerationPlane, path: string): PlatformRequest {
       aspect_ratio: plane.settings.aspectRatio,
       enhance_prompt: plane.settings.enhancePrompt,
     },
-  };
+  }
 }
 
 export const soul2: ModelEntry = {
@@ -30,7 +30,7 @@ export const soul2: ModelEntry = {
   icon: "higgsfield",
   order: 0,
   toPlatform: (plane) => mapSoul(plane, "higgsfield-ai/soul/v2/standard"),
-};
+}
 
 export const soulCinema: ModelEntry = {
   id: "soul-cinema",
@@ -41,6 +41,7 @@ export const soulCinema: ModelEntry = {
   icon: "higgsfield",
   order: 1,
   toPlatform: (plane) => mapSoul(plane, "higgsfield-ai/soul/cinema"),
-};
+}
 
-export default [soul2, soulCinema];
+const models = [soul2, soulCinema]
+export default models
