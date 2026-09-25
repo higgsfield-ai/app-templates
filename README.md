@@ -38,9 +38,6 @@ Reference uploads use the same key to obtain a signed Higgsfield storage URL.
 The browser uploads directly with the returned headers, without receiving the
 key. No separate storage account or token is required.
 
-The repo is private for now, so the CLI needs GitHub access: `gh auth login`
-or `GH_TOKEN` with read access to `higgsfield-ai/app-templates`.
-
 ## Add or update models
 
 Every model is one file in `generation/catalog/models/`. The dev server watches
