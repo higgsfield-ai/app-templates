@@ -34,7 +34,7 @@
       ],
       "devDependencies": ["eslint@^9.39.5"],
       "envVars": {
-        "HF_API_BASE_URL": "https://platform.higgsfield.ai"
+        "HF_API_BASE_URL": "https://api.higgsfield.ai"
       },
       "files": [
         {
@@ -678,7 +678,7 @@
           "target": "~/styles/theme.css"
         }
       ],
-      "docs": "Studio is installed. Next steps:\n\n  1. pnpm dev \u2014 open http://localhost:3000\n  2. Click \"Add key\" in the sidebar and paste your platform key (id:secret) from https://cloud.higgsfield.ai\n  3. Generate.\n\nModels live in generation/catalog/models/ (one file each); the dev server picks up new ones live:\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/models          # every model\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/seedance-2.5    # one model\n  pnpm dlx shadcn@latest list higgsfield-ai/app-templates                # see what is available\n\nEnv (.env.local): HF_API_BASE_URL is set to https://platform.higgsfield.ai. Reference uploads use your saved Higgsfield key and signed storage URLs; no separate storage token is needed.\n\nRead AGENTS.md before adapting the template.\n"
+      "docs": "Studio is installed. Next steps:\n\n  1. pnpm dev \u2014 open http://localhost:3000\n  2. Click \"Connect API key\" in the sidebar and paste the API key copied from https://open.higgsfield.ai/api-keys\n  3. Generate.\n\nModels live in generation/catalog/models/ (one file each); the dev server picks up new ones live:\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/models          # every model\n  pnpm dlx shadcn@latest add higgsfield-ai/app-templates/seedance-2.5    # one model\n  pnpm dlx shadcn@latest list higgsfield-ai/app-templates                # see what is available\n\nEnv (.env.local): HF_API_BASE_URL is set to https://api.higgsfield.ai. Reference uploads use your saved Higgsfield key and signed storage URLs; no separate storage token is needed.\n\nRead AGENTS.md before adapting the template.\n"
     }
   ],
   "include": [

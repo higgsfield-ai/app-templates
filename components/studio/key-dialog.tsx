@@ -20,8 +20,8 @@ import {
 } from "@/generation/actions"
 
 /**
- * Platform key dialog. The key is stored in an httpOnly cookie by a server
- * action and never reaches client code; the studio only learns whether one is set.
+ * API key dialog. A server action stores the submitted key in an httpOnly
+ * cookie; the studio only reads whether one is set.
  */
 export function KeyDialog({
   open,
@@ -74,33 +74,31 @@ export function KeyDialog({
           <DialogHeader>
             <DialogTitle>
               <KeyRound className="mr-2 size-5 shrink-0 text-q-icon-secondary" />{" "}
-              Higgsfield platform key
+              {configured ? "Manage API key" : "Connect API key"}
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
             <div className="flex flex-col gap-3">
               <p className="text-q-body-sm-regular text-q-text-secondary">
-                Paste your key as{" "}
-                <code className="text-q-mono-sm-regular text-q-text-primary">
-                  id:secret
-                </code>
-                . Get one at{" "}
+                Paste the API key copied from{" "}
                 <a
-                  href="https://cloud.higgsfield.ai"
+                  href="https://open.higgsfield.ai/api-keys"
                   target="_blank"
                   rel="noreferrer"
                   className="text-q-text-link underline"
                 >
-                  cloud.higgsfield.ai
+                  open.higgsfield.ai
                 </a>
-                . It is kept in a server-side cookie on this device.
+                . Paste it as-is. It is stored in an HTTP-only cookie in
+                this browser and used by the server for API requests.
               </p>
               <Input
                 autoFocus
+                type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="id:secret"
-                aria-label="Platform key"
+                placeholder="Paste your API key"
+                aria-label="Higgsfield API key"
                 autoComplete="off"
                 spellCheck={false}
                 invalid={error != null}
@@ -121,13 +119,13 @@ export function KeyDialog({
                   onClick={() => void clear()}
                   className="text-q-caption-sm-medium text-q-text-secondary hover:text-q-text-primary disabled:opacity-50"
                 >
-                  Remove key
+                  Remove API key
                 </button>
               ) : undefined
             }
           >
-            <Button type="submit" disabled={busy || !apiKey.includes(":")}>
-              {configured ? "Replace key" : "Save key"}
+            <Button type="submit" disabled={busy || !apiKey.trim()}>
+              {configured ? "Replace API key" : "Connect API key"}
             </Button>
           </DialogFooter>
         </form>
