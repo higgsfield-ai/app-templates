@@ -28,7 +28,7 @@ const ticket = {
 };
 
 function client(fetch) {
-  return createPlatformClient({ apiKey: "test-id:test-secret", baseUrl: "https://platform.higgsfield.ai", fetch });
+  return createPlatformClient({ apiKey: "test_api_key", baseUrl: "https://api.higgsfield.ai", fetch });
 }
 
 function png() {
@@ -37,9 +37,9 @@ function png() {
 
 test("platform requests a signed upload URL using server credentials", async () => {
   const api = client(async (url, options) => {
-    assert.equal(url, "https://platform.higgsfield.ai/files/generate-upload-url");
+    assert.equal(url, "https://api.higgsfield.ai/files/generate-upload-url");
     assert.equal(options.method, "POST");
-    assert.equal(options.headers.Authorization, "Key test-id:test-secret");
+    assert.equal(options.headers.Authorization, "Key test_api_key");
     assert.deepEqual(JSON.parse(options.body), { content_type: "image/png" });
     return Response.json(ticket);
   });
@@ -99,8 +99,8 @@ test("browser PUT forwards signed headers and bytes, never platform credentials"
 });
 
 test("browser shows actionable missing-key errors without attempting the PUT", async (t) => {
-  const fetch = t.mock.method(globalThis, "fetch", async () => Response.json({ error: "Add your Higgsfield API key in the sidebar before uploading." }, { status: 401 }));
-  await assert.rejects(() => uploadMedia(png()), /Add your Higgsfield API key/);
+  const fetch = t.mock.method(globalThis, "fetch", async () => Response.json({ error: "Connect your Higgsfield API key in the sidebar before uploading." }, { status: 401 }));
+  await assert.rejects(() => uploadMedia(png()), /Connect your Higgsfield API key/);
   assert.equal(fetch.mock.callCount(), 1);
 });
 

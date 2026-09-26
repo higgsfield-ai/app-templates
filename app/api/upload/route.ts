@@ -35,7 +35,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!credentials)
     return failure(
       401,
-      "Add your Higgsfield API key in the sidebar before uploading."
+      "Connect your Higgsfield API key in the sidebar before uploading."
     )
   const baseUrl = process.env.HF_API_BASE_URL
   if (!baseUrl)

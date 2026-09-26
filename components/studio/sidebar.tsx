@@ -256,7 +256,7 @@ export function StudioSidebar({
         <Row
           collapsed={collapsed}
           onClick={onOpenKey}
-          ariaLabel="Platform key"
+          ariaLabel={keyConfigured ? "Manage API key" : "Connect API key"}
           start={
             <span className="relative flex size-6 items-center justify-center rounded-md border border-white/10 bg-white/5 text-muted-foreground">
               <KeyRound className="size-3.5" />
@@ -269,7 +269,7 @@ export function StudioSidebar({
               />
             </span>
           }
-          title={keyConfigured ? "Key set" : "Add key"}
+          title={keyConfigured ? "API key saved" : "Connect API key"}
         />
       </div>
     </aside>

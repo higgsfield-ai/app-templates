@@ -33,6 +33,11 @@ end. Rendering the shipped examples is not completion.
   `generation/catalog/models/` (or `pnpm dlx shadcn@latest add
   higgsfield-ai/app-templates/<model>`); the dev server regenerates the barrel.
   Never hand-edit `generation/catalog/models.generated.ts`.
+- Preserve every installed model when adapting a product. `studio` installs the
+  full catalog; use `studio-bare` or a model allowlist only when the user explicitly
+  requests a smaller catalog. Keep models visible when their live API behavior
+  is unverified and report that limitation. Verify every installed model appears
+  in its image/video picker after adaptation.
 - Reference uploads request a signed URL through `app/api/upload/route.ts`
   using the saved platform key. The browser PUTs the file with every returned
   upload header and no credentials. Record the public URL only after success;

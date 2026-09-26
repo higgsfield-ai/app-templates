@@ -1,7 +1,7 @@
 # Higgsfield app templates
 
 Production-ready app templates on Next.js 16, Tailwind v4 and shadcn, generating
-through the [Higgsfield platform API](https://platform.higgsfield.ai). Shipped as
+through the [Higgsfield platform API](https://api.higgsfield.ai). Shipped as
 a [shadcn registry](https://ui.shadcn.com/docs/registry), so one command
 scaffolds a project and one command adds a model.
 
@@ -31,14 +31,20 @@ Then:
 cd my-studio && pnpm dev
 ```
 
-Open http://localhost:3000, click **Add key** in the sidebar and paste your
-platform key (`id:secret`) from https://cloud.higgsfield.ai. The key is stored
+Open http://localhost:3000, click **Connect API key** in the sidebar and paste the
+API key copied from https://open.higgsfield.ai/api-keys. The key is stored
 in an httpOnly cookie; authenticated platform calls stay on the server.
 Reference uploads use the same key to obtain a signed Higgsfield storage URL.
 The browser uploads directly with the returned headers, without receiving the
 key. No separate storage account or token is required.
 
 ## Add or update models
+
+`studio` installs the full catalog by default. When adapting the app, preserve
+every installed model in its image/video picker unless the user explicitly asks
+for a smaller catalog. If only some models have been tested against the live API,
+report that limitation and keep the others available. See the model-preservation
+rule in [AGENTS.md](AGENTS.md).
 
 Every model is one file in `generation/catalog/models/`. The dev server watches
 that directory and regenerates the barrel, so a freshly added model shows up in
@@ -60,7 +66,7 @@ Pin a version with `#ref`: `higgsfield-ai/app-templates/studio#v1.0.0`.
 
 | Variable                | Purpose                                                        |
 | ----------------------- | -------------------------------------------------------------- |
-| `HF_API_BASE_URL`       | Platform API base, prefilled with `https://platform.higgsfield.ai` |
+| `HF_API_BASE_URL`       | Platform API base, prefilled with `https://api.higgsfield.ai` |
 
 ## Working on the templates
 
@@ -73,7 +79,7 @@ cd app-templates && pnpm install && cp .env.example .env && pnpm dev
 | --------------------- | --------------------------------------------------------------- |
 | `pnpm dev`            | Dev server on :3000 (also serves the built registry at `/r/*`) |
 | `pnpm typecheck`      | `tsc --noEmit`                                                  |
-| `pnpm test`           | Upload contract and error-path tests (Node.js 22.15+)           |
+| `pnpm test`           | Credentials, uploads, and model input tests (Node.js 22.15+)    |
 | `pnpm models`         | Regenerate the models barrel and `models/registry.json`         |
 | `pnpm registry:build` | `pnpm models` + `shadcn build` → `public/r/*.json`              |
 | `pnpm build`          | Production build (runs `registry:build` first)                  |

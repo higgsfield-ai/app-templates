@@ -10,7 +10,7 @@ export const PLATFORM_KEY_COOKIE_OPTIONS = {
 
 export class MissingCredentialsError extends Error {
   constructor() {
-    super("Missing platform key")
+    super("Connect your Higgsfield API key")
     this.name = "MissingCredentialsError"
   }
 }
@@ -29,7 +29,7 @@ export function decodeCredentials(
       return null
     const apiKey = (parsed as { apiKey?: unknown }).apiKey
     if (typeof apiKey !== "string" || !apiKey.trim()) return null
-    return { apiKey: requireIdAndSecret(apiKey.trim()) }
+    return { apiKey: requireApiKey(apiKey) }
   } catch {
     return null
   }
@@ -43,17 +43,17 @@ export function parseCredentialInput(data: unknown): { apiKey: string } {
   const apiKey = record.apiKey ?? record.api_key
   if (typeof apiKey !== "string" || !apiKey.trim())
     throw new Error("Enter an API key")
-  return { apiKey: requireIdAndSecret(apiKey.trim()) }
+  return { apiKey: requireApiKey(apiKey) }
 }
 
 export function toAuthorizationHeader(apiKey: string): string {
-  return `Key ${requireIdAndSecret(apiKey)}`
+  return `Key ${requireApiKey(apiKey)}`
 }
 
-function requireIdAndSecret(apiKey: string): string {
-  const colon = apiKey.indexOf(":")
-  if (colon <= 0 || colon === apiKey.length - 1) {
-    throw new Error("API key must be id:secret")
-  }
-  return apiKey
+function requireApiKey(apiKey: string): string {
+  const key = apiKey.trim()
+  if (!key) throw new Error("Enter an API key")
+  if (/[^\x21-\x7E]/.test(key))
+    throw new Error("Paste the API key exactly as copied from open.higgsfield.ai")
+  return key
 }

@@ -19,6 +19,7 @@ const { seedance25, seedance25Edit, seedance25Extend } = await import("../genera
 const { seedance2 } = await import("../generation/catalog/models/seedance-2.ts");
 const { toPlatform } = await import("../generation/to-platform.ts");
 const { MODELS } = await import("../generation/catalog/index.ts");
+const { MODELS: installedModels } = await import("../generation/catalog/models.generated.ts");
 const mediaInputs = await import("../generation/catalog/media-inputs.ts");
 const uploadContract = await import("../generation/upload-contract.ts");
 
@@ -28,6 +29,10 @@ function items(role, count, kind = role === "source" || role === "video" ? "vide
 function plane(model, media = {}, extra = {}) {
   return { model: model.id, prompt: { text: "A cinematic scene" }, media, settings: { duration: 5, resolution: "720p", aspectRatio: "16:9", generateAudio: true, bitrateMode: "high", outputFormat: "mov" }, ...extra };
 }
+
+test("every installed model remains available in the public catalog", () => {
+  assert.deepEqual(MODELS.map((model) => model.id), installedModels.map((model) => model.id));
+});
 
 test("mixed picker routes files by kind and never fills the source slot", () => {
   const selected = [...items("reference", 2), ...items("video", 2), ...items("audio", 1)];
